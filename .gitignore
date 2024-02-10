@@ -1,0 +1,17 @@
+/local
+**.tar.gz
+**.sha256
+**.zip
+/dist
+/logs
+/modules
+**/got.json
+**/want.json
+er.log
+er.exe~
+**.exe
+/bin
+test/files/mytesting.yaml
+**/got.txt
+**/want.txt
+Dockerfile.local

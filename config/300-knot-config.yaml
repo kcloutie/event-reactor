@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-reactor-config
+  namespace: event-reactor
+  labels:
+    app.kubernetes.io/part-of: event-reactor
+data:
+  serverConfig.json: |
+    {
+      "reactorConfigs": [
+        # {
+        #   "name": "log_no_cel",
+        #   "CelExpressionFilter": "",
+        #   "type": "log",
+        #   "properties": {
+        #     "message": {
+        #       "value": "hello {{ .data.prop1 }}"
+        #     }
+        #   }
+        # },
+        {
+          "name": "log_enabled_attribute_true",
+          "CelExpressionFilter": "attributes.enabled == 'true'",
+          "disabled": true,
+          "type": "log",
+          "properties": {
+            "message": {
+              "value": "hello {{ .data.prop1 }}"
+            }
+          }
+        },
+        {
+          "name": "test_github",
+          "CelExpressionFilter": "attributes.test == 'github'",
+          "type": "log",
+          "properties": {
+            "message": {
+              "fromFile": "/home/config/templates/github-comment.md"
+            }
+          }
+        },
+      ],
+      "traceHeaderKey": "X-Cloud-Trace-Context"
+    }

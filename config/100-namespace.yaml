@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/part-of: event-reactor
+    kubernetes.io/metadata.name: event-reactor
+    openshift.io/cluster-monitoring: "true"
+  name: event-reactor

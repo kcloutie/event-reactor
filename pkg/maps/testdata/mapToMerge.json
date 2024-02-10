@@ -1,0 +1,52 @@
+{
+  "prop1": "val2",
+  "prop2": 1234,
+  "prop3": false,
+  "prop4": [
+    "3"
+  ],
+  "prop5": [
+    {
+      "childProp1": "val1",
+      "childprop2": 123,
+      "childprop3": true,
+      "childprop4": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "child2Prop1": "val1",
+      "child2prop2": 123,
+      "child2prop3": true,
+      "child2prop4": [
+        "1",
+        "2"
+      ]
+    }
+  ],
+  "prop6": {
+    "childProp1": "val1",
+    "childprop2": 123,
+    "childprop3": true,
+    "childprop4": [
+      "1",
+      "2"
+    ],
+    "childchildprop5": {
+      "childchildProp1": "val1",
+      "childchildprop2": 123,
+      "childchildprop3": true,
+      "childchildprop4": [
+        "1",
+        "2"
+      ],
+      "childchildprop5": {
+        "childchildchildProp1": "val222",
+        "childchildchildprop2": 1235678,
+        "childchildchildprop3": false
+
+      }
+    }
+  }
+}

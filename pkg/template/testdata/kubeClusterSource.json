@@ -1,0 +1,40 @@
+[
+  {
+    "apiServerURL": "https://api.cluster.test.com:6443",
+    "infrastructureName": "pp103-g4gw2",
+    "platform": "GCP",
+    "platformStatus": {
+      "gcp": {
+        "projectID": "prj-pp-caas-preprod-net-6cfb",
+        "region": "us-central1",
+        "projectNumber": 219764264310
+      },
+      "type": "GCP"
+    },
+    "consoleServerURL": "https://console-openshift-console.apps.cluster.test.com",
+    "clusterName": "pp103",
+    "dns": {
+      "internal": "apps.cluster.test.com",
+      "external": null
+    }
+  },
+  {
+    "apiServerURL": "https://api.cluster2.test.com:6443",
+    "infrastructureName": "sb102-w5xtl",
+    "platform": "GCP",
+    "platformStatus": {
+      "gcp": {
+        "projectID": "prj-caas-ocp-sb102-pp-1764",
+        "region": "us-central1",
+        "projectNumber": 807664040860
+      },
+      "type": "GCP"
+    },
+    "consoleServerURL": "https://console-openshift-console.apps.test.com",
+    "clusterName": "sb102",
+    "dns": {
+      "internal": "apps.test.com",
+      "external": null
+    }
+  }
+]

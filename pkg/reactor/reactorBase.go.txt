@@ -1,0 +1,90 @@
+package email
+
+import (
+	"context"
+
+	"github.com/kcloutie/event-reactor/pkg/config"
+	"github.com/kcloutie/event-reactor/pkg/github"
+	"github.com/kcloutie/event-reactor/pkg/message"
+	"github.com/kcloutie/event-reactor/pkg/reactor"
+	"github.com/kcloutie/event-reactor/pkg/template"
+
+	"go.uber.org/zap"
+)
+
+var _ reactor.ReactorInterface = (*Reactor)(nil)
+
+type Reactor struct {
+	Log         *zap.Logger
+	reactorName string
+	reactorConfig       config.ReactorConfig
+}
+
+type ReactorConfig struct {
+}
+
+func New() *Reactor {
+	return &Reactor{
+		reactorName: "email",
+	}
+}
+
+func (v *Reactor) SetLogger(logger *zap.Logger) {
+	v.Log = logger
+}
+func (v *Reactor) GetName() string {
+	return v.reactorName
+}
+
+func (v *Reactor) GetDescription() string {
+	return "T"
+}
+
+func (v *Reactor) SetReactor(reactor config.ReactorConfig) {
+	v.reactorConfig = reactor
+}
+
+func (v *Reactor) GetConfigExample() string {
+  return ``
+}
+
+func (v *Reactor) ProcessEvent(ctx context.Context, data *message.EventData) error {
+	v.Log = v.Log.With(zap.String("reactor", v.reactorName))
+	_, err := reactor.HasRequiredProperties(v.reactorConfig.Properties, v.GetRequiredPropertyNames())
+	if err != nil {
+		return err
+	}
+
+	templateConfig := template.NewRenderTemplateOptions()
+	reactor.SetGoTemplateOptionValues(ctx, v.Log, &templateConfig, v.reactorConfig.Properties)
+
+	reactorConfig, err := v.GetReactorConfig(ctx, data, v.Log)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *Reactor) GetReactorConfig(ctx context.Context, data *message.EventData, log *zap.Logger) (*ReactorConfig, error) {
+
+}
+
+func (v *Reactor) GetProperties() []config.ReactorConfigProperty {
+	return []config.ReactorConfigProperty{
+		{
+			Name:        "heading",
+			Description: "The heading of the comment. This field supports go templating. The heading is also used to find previous comments to remove",
+			Required:    config.AsBoolPointer(true),
+      Type:        config.PropertyTypeString,
+		},
+	}
+}
+
+func (v *Reactor) GetRequiredPropertyNames() []string {
+	return reactor.GetRequiredPropertyNames(v)
+}
+
+func (v *Reactor) GetHelp() string {
+	return reactor.GetReactorHelp(v)
+}

@@ -1,0 +1,128 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: event-reactor
+    kubernetes.io/metadata.name: event-reactor
+    app.kubernetes.io/metadata.name: event-reactor
+  name: event-reactor-controller-manager
+  namespace: event-reactor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/metadata.name: event-reactor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: event-reactor
+        kubernetes.io/metadata.name: event-reactor
+        app.kubernetes.io/metadata.name: event-reactor
+    spec:
+      containers:
+      - name: event-reactor
+        args:
+        - run
+        - server
+        - --config-file-path
+        - /home/config/serverConfig.json
+        # command:
+        # - /home/default/manager
+        
+        env:
+        - name: EVENT_REACTOR_LOG
+          value: CONSOLE
+        - name: LOG_LEVEL
+          value: "DEBUG"
+          
+        # - name: GOOGLE_APPLICATION_CREDENTIALS
+        #   value: /var/run/secrets/google/credentials_config.json
+        # - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+        #   value: /var/run/secrets/google/credentials_config.json
+        image: ko://github.com/kcloutie/event-reactor/cmd/er
+        
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: "1"
+            memory: 3Gi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        # - mountPath: /var/run/secrets/google
+        #   name: gcp-credentialsrequest-credentials-vol
+        #   readOnly: true
+        - mountPath: /var/run/secrets/openshift/serviceaccount
+          name: bound-sa-token
+          readOnly: true
+        - mountPath: /home/config/serverConfig.json
+          name: event-reactor-config
+          subPath: serverConfig.json
+        - mountPath: /home/config/templates/github-comment.md
+          name: github-comment-markdown
+          subPath: github-comment.md
+        - mountPath: /tmp/tokens
+          name: tokens
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: event-reactor-controller-manager
+      terminationGracePeriodSeconds: 10
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/part-of: event-reactor
+        maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/part-of: event-reactor
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+      volumes:
+      - name: bound-sa-token
+        projected:
+          defaultMode: 420
+          sources:
+          - serviceAccountToken:
+              audience: openshift
+              expirationSeconds: 3600
+              path: token
+      # - name: gcp-credentialsrequest-credentials-vol
+      #   configMap:
+      #     defaultMode: 420
+      #     name: event-reactor-google-creds
+      #     optional: true
+      - name: event-reactor-config
+        configMap:
+          name: event-reactor-config
+      - name: github-comment-markdown
+        configMap:
+          name: github-comment-markdown
+      - emptyDir:
+          sizeLimit: 2Gi
+        name: tokens

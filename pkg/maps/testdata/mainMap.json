@@ -1,0 +1,47 @@
+{
+  "prop1": "val1",
+  "prop2": 123,
+  "prop3": true,
+  "prop4": [
+    "1",
+    "2"
+  ],
+  "prop5": [
+    {
+      "childProp1": "val1",
+      "childprop2": 123,
+      "childprop3": true,
+      "childprop4": [
+        "1",
+        "2"
+      ]
+    }
+  ],
+  "prop6": {
+    "childProp1": "val1",
+    "childprop2": 123,
+    "childprop3": true,
+    "childprop4": [
+      "1",
+      "2"
+    ],
+    "childchildprop5": {
+      "childchildProp1": "val1",
+      "childchildprop2": 123,
+      "childchildprop3": true,
+      "childchildprop4": [
+        "1",
+        "2"
+      ],
+      "childchildprop5": {
+        "childchildchildProp1": "val1",
+        "childchildchildprop2": 123,
+        "childchildchildprop3": true,
+        "childchildchildprop4": [
+          "1",
+          "2"
+        ]
+      }
+    }
+  }
+}

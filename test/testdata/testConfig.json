@@ -1,0 +1,15 @@
+{
+  "reactorConfigs": [
+    {
+      "name": "test_github",
+      "CelExpressionFilter": "attributes.test == 'github'",
+      "type": "log",
+      "properties": {
+        "message": {
+          "value": "{{ .data.extra.pipelineRunVariables.RESULT_COMMENT_HEADING }}"
+        }
+      }
+    }
+  ],
+  "traceHeaderKey": "X-Cloud-Trace-Context"
+}
