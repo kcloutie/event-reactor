@@ -83,24 +83,41 @@ type PropertyValidation struct {
 	MaxLength              *int   `json:"maxLength,omitempty" yaml:"maxLength,omitempty"`
 }
 
-func (pv *PropertyAndValue) GetValueProp() interface{} {
+// var templateConfig = template.NewRenderTemplateOptions()
+
+func (pv *PropertyAndValue) GetValueProp(ctx context.Context, data *message.EventData) (interface{}, error) {
 	if pv.Value != nil {
 		switch v := pv.Value.(type) {
 		case *string:
-			return *v
+			// if strings.Contains(*v, "{{") {
+			// 	rendered, err := template.RenderTemplateValues(ctx, *v, "GetValueProp/*string", data.AsMap(), []string{}, templateConfig)
+			// 	if err != nil {
+			// 		return nil, fmt.Errorf("error rendering template for property value %s: %w", *v, err)
+			// 	}
+			// 	return string(rendered), nil
+			// }
+			return *v, nil
 		case *[]string:
-			return *v
+			return *v, nil
 		case *map[string]interface{}:
-			return *v
+			return *v, nil
 		case *map[string]string:
-			return *v
+			return *v, nil
 		case *interface{}:
-			return *v
+			return *v, nil
+		// case string:
+		// 	if strings.Contains(v, "{{") {
+		// 		rendered, err := template.RenderTemplateValues(ctx, v, "GetValueProp/string", data.AsMap(), []string{}, templateConfig)
+		// 		if err != nil {
+		// 			return nil, fmt.Errorf("error rendering template for property value %s: %w", v, err)
+		// 		}
+		// 		return string(rendered), nil
+		// 	}
 		default:
-			return v
+			return v, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func (pv *PropertyAndValue) GetFromFileProp() string {
@@ -265,7 +282,7 @@ func (o PropertyAndValue) GetValue(ctx context.Context, log *zap.Logger, data *m
 		return os.Getenv(o.GetFromEnvProp()), nil
 	}
 
-	return o.GetValueProp(), nil
+	return o.GetValueProp(ctx, data)
 }
 
 func NewServerConfiguration() *ServerConfiguration {

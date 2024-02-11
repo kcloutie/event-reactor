@@ -3,6 +3,8 @@ package adapter
 import (
 	"github.com/kcloutie/event-reactor/pkg/config"
 	"github.com/kcloutie/event-reactor/pkg/reactor/email"
+	"github.com/kcloutie/event-reactor/pkg/reactor/gcppublishpubsub"
+	"github.com/kcloutie/event-reactor/pkg/reactor/gcprotaterandom"
 	"github.com/kcloutie/event-reactor/pkg/reactor/powershell"
 	"github.com/kcloutie/event-reactor/pkg/reactor/webex"
 	"github.com/kcloutie/event-reactor/pkg/reactor/webhook"
@@ -50,6 +52,22 @@ func GetReactorNewFunctions(loadTestReactor bool) map[string]func(log *zap.Logge
 	webexReactor := webex.New()
 	results[webexReactor.GetName()] = func(log *zap.Logger, reactorConfig config.ReactorConfig) reactor.ReactorInterface {
 		reactor := webex.New()
+		reactor.SetLogger(log)
+		reactor.SetReactor(reactorConfig)
+		return reactor
+	}
+
+	gcpRotateRandomReactor := gcprotaterandom.New()
+	results[gcpRotateRandomReactor.GetName()] = func(log *zap.Logger, reactorConfig config.ReactorConfig) reactor.ReactorInterface {
+		reactor := gcprotaterandom.New()
+		reactor.SetLogger(log)
+		reactor.SetReactor(reactorConfig)
+		return reactor
+	}
+
+	gcpPublishPubPubReactor := gcppublishpubsub.New()
+	results[gcpPublishPubPubReactor.GetName()] = func(log *zap.Logger, reactorConfig config.ReactorConfig) reactor.ReactorInterface {
+		reactor := gcppublishpubsub.New()
 		reactor.SetLogger(log)
 		reactor.SetReactor(reactorConfig)
 		return reactor

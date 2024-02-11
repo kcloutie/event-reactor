@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// https://github.com/google/cel-spec/blob/master/doc/langdef.md
 var (
 	structType = reflect.TypeOf(&structpb.Value{})
 	listType   = reflect.TypeOf(&structpb.ListValue{})

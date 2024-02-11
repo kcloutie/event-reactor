@@ -18,7 +18,9 @@
         "GIN_MODE": "release"
       },
       "args": [
-        "run", "server", "-c", "test/files/mytesting.yaml", "--debug"
+        // "run", "server", "-c", "test/files/mytesting.yaml", "--debug"
+        "run", "server", "-c", "test/files/rotatePassword.yaml", "--debug"
+
         // "run", "server", "-c", "test/files/serverConfig.json", "--debug"
       ]
     },

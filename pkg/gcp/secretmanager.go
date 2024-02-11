@@ -23,7 +23,10 @@ type secretValueCache struct {
 	CachedValue string
 }
 
-func createKey(project string, name string, version string) string {
+func getSecretPath(project string, name string, version string) string {
+	if version == "" {
+		return fmt.Sprintf("projects/%s/secrets/%v", project, name)
+	}
 	return fmt.Sprintf("projects/%s/secrets/%v/versions/%v", project, name, version)
 }
 
@@ -37,7 +40,7 @@ func cacheExpired(cache secretValueCache) bool {
 }
 
 func checkCache(project string, name string, version string) (string, bool) {
-	key := createKey(project, name, version)
+	key := getSecretPath(project, name, version)
 	refreshCache := false
 	val, exists := secretCache[key]
 	secretVal := ""
@@ -68,7 +71,7 @@ func GetSecret(ctx context.Context, client *secretmanager.Client, project, name,
 		defer client.Close()
 	}
 
-	fullName := createKey(project, name, version)
+	fullName := getSecretPath(project, name, version)
 	req := &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fullName,
 	}
@@ -92,6 +95,41 @@ func GetSecret(ctx context.Context, client *secretmanager.Client, project, name,
 		CachedTime:  time.Now(),
 	}
 	return secretCache[fullName].CachedValue, nil
+}
+
+func AddVersion(ctx context.Context, client *secretmanager.Client, project, name, secretData string) (string, error) {
+	// log := logger.FromCtx(ctx)
+
+	// Declare the payload to store.
+	payload := []byte(secretData)
+	// Compute checksum, use Castagnoli polynomial. Providing a checksum
+	// is optional.
+	crc32c := crc32.MakeTable(crc32.Castagnoli)
+	checksum := int64(crc32.Checksum(payload, crc32c))
+
+	if client == nil {
+		var err error
+		client, err = secretmanager.NewClient(ctx)
+		if err != nil {
+			return "", fmt.Errorf("failed to setup secret manager client: %v", err)
+		}
+		defer client.Close()
+	}
+
+	fullName := getSecretPath(project, name, "")
+	req := &secretmanagerpb.AddSecretVersionRequest{
+		Parent: fullName,
+		Payload: &secretmanagerpb.SecretPayload{
+			Data:       payload,
+			DataCrc32C: &checksum,
+		},
+	}
+	result, err := client.AddSecretVersion(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to add secret version '%v': %v", req.Parent, err)
+	}
+
+	return result.Name, nil
 }
 
 var secretManagerClient *secretmanager.Client

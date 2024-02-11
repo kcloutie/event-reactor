@@ -11,6 +11,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/kcloutie/event-reactor/pkg/cli"
 	"github.com/kcloutie/event-reactor/pkg/cmd"
+	"github.com/kcloutie/event-reactor/pkg/cmd/er/add"
 	"github.com/kcloutie/event-reactor/pkg/cmd/er/get"
 	"github.com/kcloutie/event-reactor/pkg/cmd/er/publish"
 	"github.com/kcloutie/event-reactor/pkg/cmd/er/run"
@@ -67,6 +68,7 @@ func Root(cliParams *params.Run) *cobra.Command {
 	cCmd.AddCommand(run.Root(cliParams, ioStreams))
 	cCmd.AddCommand(get.Root(cliParams, ioStreams))
 	cCmd.AddCommand(publish.Root(cliParams, ioStreams))
+	cCmd.AddCommand(add.Root(cliParams, ioStreams))
 
 	return cCmd
 }

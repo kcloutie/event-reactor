@@ -9,7 +9,6 @@ import (
 	"github.com/kcloutie/event-reactor/pkg/cli"
 	"github.com/kcloutie/event-reactor/pkg/config"
 	"github.com/kcloutie/event-reactor/pkg/logger"
-	"github.com/kcloutie/event-reactor/pkg/params/settings"
 	"github.com/kcloutie/event-reactor/pkg/reactor"
 	"github.com/spf13/cobra"
 
@@ -23,7 +22,7 @@ type ReactorCmdOptions struct {
 	Name      string
 }
 
-func ReactorCommand(run *params.Run, ioStreams *cli.IOStreams) *cobra.Command {
+func ReactorCommand(run *params.Run, rootOpts *RootCmdOption, ioStreams *cli.IOStreams) *cobra.Command {
 	options := &ReactorCmdOptions{}
 	cCmd := &cobra.Command{
 		Use:     "reactor",
@@ -44,7 +43,7 @@ func ReactorCommand(run *params.Run, ioStreams *cli.IOStreams) *cobra.Command {
 
 			options.IoStreams = ioStreams
 			options.CliOpts = cli.NewCliOptions()
-			options.IoStreams.SetColorEnabled(!settings.RootOptions.NoColor)
+			options.IoStreams.SetColorEnabled(!rootOpts.NoColorFlag)
 			cmd.CheckForUnknownArgsExitWhenFound(args, ioStreams)
 
 			rf := adapter.GetReactorNewFunctions(false)

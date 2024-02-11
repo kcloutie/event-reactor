@@ -32,7 +32,7 @@ build:
 	@echo "OUTPUT_FILE: ${OUTPUT_FILE}"
 	@echo ""
 	@echo "Building CLI..."
-	@go build $(LDFLAGS) -o bin/$(OUTPUT_FILE) cmd/er/er.go
+	@go build $(LDFLAGS) -o $(OUTPUT_FILE) cmd/er/er.go
 
 .PHONY: api-server
 api-server: build

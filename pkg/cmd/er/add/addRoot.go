@@ -1,4 +1,4 @@
-package get
+package add
 
 import (
 	"github.com/kcloutie/event-reactor/pkg/cli"
@@ -15,9 +15,9 @@ type RootCmdOption struct {
 
 func Root(cliParams *params.Run, ioStreams *cli.IOStreams) *cobra.Command {
 	cCmd := &cobra.Command{
-		Use:     "get",
+		Use:     "add",
 		Aliases: []string{},
-		Short:   "Gets data about the event reactor",
+		Short:   "Creates things",
 	}
 
 	rootOpts := &RootCmdOption{}
@@ -26,7 +26,6 @@ func Root(cliParams *params.Run, ioStreams *cli.IOStreams) *cobra.Command {
 	cCmd.PersistentFlags().StringVarP(&rootOpts.Output, "output", "o", "", "Output format. One of: (json, yaml)")
 	cCmd.PersistentFlags().StringVarP(&rootOpts.WorkingDir, "cwd", "w", "", "Current working directory")
 
-	cCmd.AddCommand(ReactorCommand(cliParams, rootOpts, ioStreams))
-	cCmd.AddCommand(GcpSecretCommand(cliParams, rootOpts, ioStreams))
+	cCmd.AddCommand(AddGcpSecretVersionCommand(cliParams, rootOpts, ioStreams))
 	return cCmd
 }

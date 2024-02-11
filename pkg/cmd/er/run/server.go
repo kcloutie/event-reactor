@@ -4,14 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/kcloutie/event-reactor/pkg/api"
 	"github.com/kcloutie/event-reactor/pkg/cli"
 	"github.com/kcloutie/event-reactor/pkg/config"
+	"github.com/kcloutie/event-reactor/pkg/filesystem"
+	"github.com/kcloutie/event-reactor/pkg/logger"
 	"github.com/kcloutie/event-reactor/pkg/params/settings"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/kcloutie/event-reactor/pkg/cmd"
 	"github.com/kcloutie/event-reactor/pkg/params"
 	"gopkg.in/yaml.v3"
@@ -42,18 +47,42 @@ func ServerCommand(run *params.Run, ioStreams *cli.IOStreams) *cobra.Command {
 		`),
 		Run: func(cCmd *cobra.Command, args []string) {
 			ctx := cmd.InitContextWithLogger("run", "server")
+			log := logger.FromCtx(ctx)
 			serverConfig := config.NewServerConfiguration()
 			if options.ConfigFilePath != "" {
-				data, err := os.ReadFile(options.ConfigFilePath)
+				readServerCfgFile(options, ioStreams, serverConfig)
+				watcher, err := fsnotify.NewWatcher()
 				if err != nil {
-					cmd.WriteCmdErrorToScreen(err.Error(), ioStreams, true, true)
+					log.Warn(fmt.Sprintf("failed to create a file watcher for the config file '%s'. Unable to watch for changes - %v", options.ConfigFilePath, err))
 				}
-				err = json.Unmarshal(data, serverConfig)
-				if err != nil {
-					err = yaml.Unmarshal(data, serverConfig)
-					if err != nil {
-						cmd.WriteCmdErrorToScreen(fmt.Sprintf("failed to unmarshal the settings using yaml and json - %v\n\nContents:\n%s", err, string(data)), ioStreams, true, true)
+				defer watcher.Close()
+				go func() {
+					for {
+						select {
+						case event, ok := <-watcher.Events:
+							if !ok {
+								return
+							}
+							if event.Has(fsnotify.Write) {
+								nCfgPath := filesystem.NormalizeFilePath(options.ConfigFilePath)
+								nEventPath := filesystem.NormalizeFilePath(event.Name)
+								if nCfgPath == nEventPath {
+									log.Info("config file changed, reloading", zap.String("file", options.ConfigFilePath))
+									readServerCfgFile(options, ioStreams, serverConfig)
+									ctx = config.WithCtx(ctx, serverConfig)
+								}
+							}
+						case err, ok := <-watcher.Errors:
+							if !ok {
+								return
+							}
+							log.Error("error watching file", zap.Error(err), zap.String("file", options.ConfigFilePath))
+						}
 					}
+				}()
+				err = watcher.Add(filepath.Dir(options.ConfigFilePath))
+				if err != nil {
+					log.Error("error adding watcher", zap.Error(err), zap.String("file", options.ConfigFilePath))
 				}
 			}
 
@@ -75,4 +104,18 @@ func ServerCommand(run *params.Run, ioStreams *cli.IOStreams) *cobra.Command {
 	cCmd.Flags().IntVar(&options.CacheInSeconds, "cache-expire-seconds", 3600, "The number of seconds before cached values of the web server will expire")
 
 	return cCmd
+}
+
+func readServerCfgFile(options *ServerCmdOptions, ioStreams *cli.IOStreams, serverConfig *config.ServerConfiguration) {
+	data, err := os.ReadFile(options.ConfigFilePath)
+	if err != nil {
+		cmd.WriteCmdErrorToScreen(err.Error(), ioStreams, true, true)
+	}
+	err = json.Unmarshal(data, serverConfig)
+	if err != nil {
+		err = yaml.Unmarshal(data, serverConfig)
+		if err != nil {
+			cmd.WriteCmdErrorToScreen(fmt.Sprintf("failed to unmarshal the settings using yaml and json - %v\n\nContents:\n%s", err, string(data)), ioStreams, true, true)
+		}
+	}
 }

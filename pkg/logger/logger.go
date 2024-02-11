@@ -171,7 +171,6 @@ func getLogLevelFromEnv() zap.AtomicLevel {
 	}
 
 	logLevel := zap.NewAtomicLevelAt(level)
-	fmt.Println("logLevel: ", logLevel.String())
 	return logLevel
 }
 

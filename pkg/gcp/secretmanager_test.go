@@ -35,7 +35,7 @@ func Test_createKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := createKey(tt.args.project, tt.args.name, tt.args.version); got != tt.want {
+			if got := getSecretPath(tt.args.project, tt.args.name, tt.args.version); got != tt.want {
 				t.Errorf("createKey() = %v, want %v", got, tt.want)
 			}
 		})

@@ -62,7 +62,7 @@ func (c WebexConfiguration) SendWithCard() error {
 	cardObject := map[string]interface{}{}
 	err := json.Unmarshal([]byte(c.Card), &cardObject)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal the webex card into json - %v", err)
 	}
 	var cardAttach []WebexCardAttachment
 	cardData := WebexCardAttachment{
