@@ -51,7 +51,25 @@ func (v *Reactor) SetReactor(reactor config.ReactorConfig) {
 }
 
 func (v *Reactor) GetConfigExample() string {
-	return ``
+	return `
+- name: test_gcpPublishPubSub
+  celExpressionFilter: has(attributes.eventType) && attributes['eventType'] == 'SECRET_VERSION_ADD'
+  failOnError: false
+  disabled: false
+  type: gcp/pubsub/publish/message
+  properties:
+    topicId:
+      value: some-topic
+    project:
+      value: some-project
+    payload:
+      value: '{"appName":"testApp","platform":"cloudRun"}'
+    attributes:
+      value:
+        eventType: "REDEPLOY_APP"
+        dataFormat: "JSON_API_V1"
+        secretId: "{{ .attributes.secretId }}"
+`
 }
 
 func (v *Reactor) ProcessEvent(ctx context.Context, data *message.EventData) error {
