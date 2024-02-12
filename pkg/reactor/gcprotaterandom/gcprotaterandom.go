@@ -25,14 +25,15 @@ type Reactor struct {
 }
 
 type ReactorConfig struct {
-	PasswordLength      int
-	UseLowerCase        bool
-	UseUpperCase        bool
-	UseSpecial          bool
-	UseNumbers          bool
-	SpecialCharOverride string
-	GcpProject          string
-	GcpSecretName       string
+	PasswordLength         int
+	UseLowerCase           bool
+	UseUpperCase           bool
+	UseSpecial             bool
+	UseNumbers             bool
+	UseExistingSecretValue bool
+	SpecialCharOverride    string
+	GcpProject             string
+	GcpSecretName          string
 }
 
 func New() *Reactor {
@@ -92,9 +93,17 @@ func (v *Reactor) ProcessEvent(ctx context.Context, data *message.EventData) err
 	if err != nil {
 		return err
 	}
+	password := password.GeneratePassword(reactorConfig.PasswordLength, reactorConfig.UseLowerCase, reactorConfig.UseUpperCase, reactorConfig.UseSpecial, reactorConfig.UseNumbers, reactorConfig.SpecialCharOverride)
 
-	randomPassword := password.GeneratePassword(reactorConfig.PasswordLength, reactorConfig.UseLowerCase, reactorConfig.UseUpperCase, reactorConfig.UseSpecial, reactorConfig.UseNumbers, reactorConfig.SpecialCharOverride)
-	version, err := gcp.AddVersion(ctx, nil, reactorConfig.GcpProject, reactorConfig.GcpSecretName, randomPassword)
+	if reactorConfig.UseExistingSecretValue {
+		v.Log.Info("Using the existing value of the secret to update the secret with")
+		password, err = gcp.GetSecret(ctx, nil, reactorConfig.GcpProject, reactorConfig.GcpSecretName, "latest")
+		if err != nil {
+			return fmt.Errorf("failed to get the value of the GCP secret: %v", err)
+		}
+	}
+
+	version, err := gcp.AddVersion(ctx, nil, reactorConfig.GcpProject, reactorConfig.GcpSecretName, password)
 	if err != nil {
 		return fmt.Errorf("failed to add a new version to the GCP secret: %v", err)
 	}
@@ -150,6 +159,15 @@ func (v *Reactor) GetReactorConfig(ctx context.Context, data *message.EventData,
 		config.UseSpecial, err = strconv.ParseBool(useSpecialStr)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert the supplied useSpecial '%v' to a boolean. Error: %v", useSpecialStr, err)
+		}
+	}
+
+	config.UseExistingSecretValue = true
+	useExistingSecretValueStr, err := v.reactorConfig.Properties["useExistingSecretValue"].GetStringValue(ctx, v.Log, data)
+	if err == nil && useExistingSecretValueStr != "" {
+		config.UseExistingSecretValue, err = strconv.ParseBool(useExistingSecretValueStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert the supplied useExistingSecretValue '%v' to a boolean. Error: %v", useExistingSecretValueStr, err)
 		}
 	}
 
@@ -217,25 +235,25 @@ func (v *Reactor) GetProperties() []config.ReactorConfigProperty {
 		{
 			Name:        "useLowerCase",
 			Description: "Use lower case letters in the random password",
-			Required:    config.AsBoolPointer(true),
+			Required:    config.AsBoolPointer(false),
 			Type:        config.PropertyTypeString,
 		},
 		{
 			Name:        "useUpperCase",
 			Description: "Use upper case letters in the random password",
-			Required:    config.AsBoolPointer(true),
+			Required:    config.AsBoolPointer(false),
 			Type:        config.PropertyTypeString,
 		},
 		{
 			Name:        "useSpecial",
 			Description: "Use special characters in the random password",
-			Required:    config.AsBoolPointer(true),
+			Required:    config.AsBoolPointer(false),
 			Type:        config.PropertyTypeString,
 		},
 		{
 			Name:        "useNumbers",
 			Description: "Use numbers in the random password",
-			Required:    config.AsBoolPointer(true),
+			Required:    config.AsBoolPointer(false),
 			Type:        config.PropertyTypeString,
 		},
 		{
@@ -260,6 +278,12 @@ func (v *Reactor) GetProperties() []config.ReactorConfigProperty {
 			Name:        "secretFullName",
 			Description: "The full name of the GCP secret to rotate i.e projects/<PROJRCT_ID>/secrets/<SECRET_NAME>. This property is used to override the project and secretName properties. If this property is supplied, the project and secretName properties will be ignored",
 			Required:    config.AsBoolPointer(true),
+			Type:        config.PropertyTypeString,
+		},
+		{
+			Name:        "useExistingSecretValue",
+			Description: "Use the existing value of the secret to update the secret with. If this property is set to true, the passwordLength, useLowerCase, useUpperCase, useSpecial, useNumbers, and specialCharOverride properties will be ignored",
+			Required:    config.AsBoolPointer(false),
 			Type:        config.PropertyTypeString,
 		},
 	}
