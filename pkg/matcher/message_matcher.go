@@ -15,7 +15,7 @@ import (
 func Matches(ctx context.Context, reactorConfig config.ReactorConfig, data *message.EventData) (bool, error) {
 	log := logger.FromCtx(ctx).With(zap.String("reactorName", reactorConfig.Name), zap.String("reactorType", reactorConfig.Type)).Sugar()
 	if reactorConfig.Disabled {
-		log.Debug("reactor '%s' is disabled, skipping event", reactorConfig.Name)
+		log.Debugf("reactor '%s' is disabled, skipping event", reactorConfig.Name)
 		return false, nil
 
 	}
@@ -34,7 +34,7 @@ func Matches(ctx context.Context, reactorConfig config.ReactorConfig, data *mess
 		log.Debugf("message matched reactor '%s' CEL filtering", reactorConfig.Name)
 		return true, nil
 	}
-	log.Debug("message did not match reactor '%s' CEL filtering", reactorConfig.Name)
+	log.Debugf("message did not match reactor '%s' CEL filtering", reactorConfig.Name)
 	return false, nil
 
 }
