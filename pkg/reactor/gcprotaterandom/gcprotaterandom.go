@@ -162,7 +162,7 @@ func (v *Reactor) GetReactorConfig(ctx context.Context, data *message.EventData,
 		}
 	}
 
-	config.UseExistingSecretValue = true
+	config.UseExistingSecretValue = false
 	useExistingSecretValueStr, err := v.reactorConfig.Properties["useExistingSecretValue"].GetStringValue(ctx, v.Log, data)
 	if err == nil && useExistingSecretValueStr != "" {
 		config.UseExistingSecretValue, err = strconv.ParseBool(useExistingSecretValueStr)
