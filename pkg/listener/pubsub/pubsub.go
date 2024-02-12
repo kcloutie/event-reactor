@@ -53,8 +53,6 @@ func (v *Listener) ParsePayload(ctx context.Context, log *zap.Logger, payload []
 		return nil, errD
 	}
 
-	// log.Debug("Pub/Sub Payload", zap.Any("payload", payload))
-
 	notifyData, err := message.PubSubMessageToEventData(request)
 	if err != nil {
 		errD := &http.ErrorDetail{

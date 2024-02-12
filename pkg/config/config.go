@@ -35,10 +35,12 @@ func AsStringPointer(val string) *string {
 }
 
 type ServerConfiguration struct {
-	ReactorConfigs  []ReactorConfig `json:"reactorConfigs,omitempty" yaml:"reactorConfigs,omitempty"`
-	TraceHeaderKey  string          `json:"traceHeaderKey,omitempty" yaml:"traceHeaderKey,omitempty"`
-	LoadTestReactor bool            `json:"loadTestReactor,omitempty" yaml:"loadTestReactor,omitempty"`
-	AlwaysReturn200 bool            `json:"alwaysReturn200,omitempty" yaml:"alwaysReturn200,omitempty"`
+	ReactorConfigs      []ReactorConfig `json:"reactorConfigs,omitempty" yaml:"reactorConfigs,omitempty"`
+	TraceHeaderKey      string          `json:"traceHeaderKey,omitempty" yaml:"traceHeaderKey,omitempty"`
+	LoadTestReactor     bool            `json:"loadTestReactor,omitempty" yaml:"loadTestReactor,omitempty"`
+	AlwaysReturn200     bool            `json:"alwaysReturn200,omitempty" yaml:"alwaysReturn200,omitempty"`
+	LogRawPubSubPayload bool            `json:"logRawPubSubPayload,omitempty" yaml:"logRawPubSubPayload,omitempty"`
+	LogEventDataPayload bool            `json:"logEventDataPayload,omitempty" yaml:"logEventDataPayload,omitempty"`
 	//X-Cloud-Trace-Context
 }
 

@@ -53,13 +53,19 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		WriteResponse(slog, int(errD.Status), []http.ErrorDetail{*errD}, c, cfg)
 		return
 	}
-
+	if cfg.LogRawPubSubPayload {
+		log.Info("Raw Pub/Sub Payload", zap.String("payload", string(payload)))
+	}
 	eventPayload, errD := listener.ParsePayload(ctx, log, payload)
 	if errD != nil {
 		log.Error(errD.Detail)
 
 		WriteResponse(slog, int(errD.Status), []http.ErrorDetail{*errD}, c, cfg)
 		return
+	}
+
+	if cfg.LogEventDataPayload {
+		log.Info("EventPayload Payload", zap.Any("eventPayload", eventPayload))
 	}
 
 	reactorFunctions := adapter.GetReactorNewFunctions(cfg.LoadTestReactor)
