@@ -54,7 +54,7 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		return
 	}
 	if cfg.LogRawPubSubPayload {
-		log.Info("Raw Pub/Sub Payload", zap.String("payload", string(payload)))
+		log.Info("raw Pub/Sub Payload", zap.String("payload", string(payload)))
 	}
 	eventPayload, errD := listener.ParsePayload(ctx, log, payload)
 	if errD != nil {
@@ -65,7 +65,7 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 	}
 
 	if cfg.LogEventDataPayload {
-		log.Info("EventPayload Payload", zap.Any("eventPayload", eventPayload))
+		log.Info("eventPayload Payload", zap.Any("eventPayload", eventPayload))
 	}
 
 	reactorFunctions := adapter.GetReactorNewFunctions(cfg.LoadTestReactor)
@@ -83,7 +83,7 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		ch := make(chan http.ErrorDetail, 1)
 		channels = append(channels, ch)
 		defer close(ch)
-		log := log.With(zap.String("reactor", reactorConfig.Name))
+		log := log.With(zap.String("reactorName", reactorConfig.Name), zap.String("reactorType", reactorConfig.Type))
 		go executeReactors(wg, channels[i], ctx, reactorConfig, eventPayload, listener, log, reactorFunctions)
 	}
 	wg.Wait()
@@ -127,7 +127,7 @@ func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.C
 		return
 	}
 	if !matches {
-		log.Debug(fmt.Sprintf("reactor config '%s' does not match message", reactorConfig.Name))
+		// log.Debug(fmt.Sprintf("reactor '%s' of type '%s' does not match message", reactorConfig.Name, reactorConfig.Type))
 		wg.Done()
 		return
 	}
@@ -150,7 +150,7 @@ func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.C
 
 	reactorObj := newReactorFunc(log, reactorConfig)
 
-	log.Debug(fmt.Sprintf("executing reactor config '%s' of type %s", reactorConfig.Name, reactorObj.GetName()))
+	log.Debug(fmt.Sprintf("executing reactor '%s' of type '%s'", reactorConfig.Name, reactorObj.GetName()))
 	err = reactorObj.ProcessEvent(ctx, eventPayload)
 	if err != nil {
 		errD := http.ErrorDetail{
@@ -171,6 +171,6 @@ func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.C
 		return
 	}
 
-	log.Debug(fmt.Sprintf("execution of reactor config %s of type %s has completed successfully", reactorConfig.Name, reactorObj.GetName()))
+	log.Debug(fmt.Sprintf("execution of reactor '%s' of type '%s' has completed successfully", reactorConfig.Name, reactorObj.GetName()))
 	wg.Done()
 }

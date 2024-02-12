@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/cel-go/common/types"
 	"github.com/kcloutie/event-reactor/pkg/cel"
@@ -12,27 +13,28 @@ import (
 )
 
 func Matches(ctx context.Context, reactorConfig config.ReactorConfig, data *message.EventData) (bool, error) {
-	log := logger.FromCtx(ctx).With(zap.String("reactorConfig", reactorConfig.Name))
+	log := logger.FromCtx(ctx).With(zap.String("reactorName", reactorConfig.Name), zap.String("reactorType", reactorConfig.Type)).Sugar()
 	if reactorConfig.Disabled {
-		log.Debug("reactor config is disabled, skipping event")
+		log.Debug("reactor '%s' is disabled, skipping event", reactorConfig.Name)
 		return false, nil
 
 	}
 	if reactorConfig.CelExpressionFilter == "" {
-		log.Debug("reactor config has no CEL expression filter so it matches all events")
+		log.Debugf("reactor '%s' has no CEL expression filter so it matches all events", reactorConfig.Name)
 		return true, nil
 	}
 
 	matches, err := cel.CelEvaluate(ctx, reactorConfig.CelExpressionFilter, message.GetCelDecl(), data.AsMap())
 	if err != nil {
-		log.Error("error evaluating CEL expression", zap.Error(err))
+		log.Error(fmt.Sprintf("error evaluating CEL expression on reactor '%s'", reactorConfig.Name), zap.Error(err))
 		return false, nil
 	}
 	if matches == types.True {
-		log.Debug("message matched reactor config CEL filtering")
+
+		log.Debugf("message matched reactor '%s' CEL filtering", reactorConfig.Name)
 		return true, nil
 	}
-	log.Debug("message did not match reactor config CEL filtering")
+	log.Debug("message did not match reactor '%s' CEL filtering", reactorConfig.Name)
 	return false, nil
 
 }
