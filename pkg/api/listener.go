@@ -64,6 +64,8 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		return
 	}
 
+	log = log.With(zap.String("message_id", eventPayload.ID))
+
 	if cfg.LogEventDataPayload {
 		log.Info("eventPayload Payload", zap.Any("eventPayload", eventPayload))
 	}
@@ -74,6 +76,14 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		slog.Warnf("no reactors configured for listener '%s'", listener.GetName())
 	}
 
+	errors := RunReactorsAsync(ctx, cfg, log, eventPayload, listener.GetName(), listener.GetApiPath(), reactorFunctions)
+	if len(errors) > 0 {
+		WriteResponse(slog, 400, errors, c, cfg)
+		return
+	}
+}
+
+func RunReactorsAsync(ctx context.Context, cfg *config.ServerConfiguration, log *zap.Logger, eventPayload *message.EventData, listenerName string, listenerApiPath string, reactorFunctions map[string]func(log *zap.Logger, reactorConfig config.ReactorConfig) reactor.ReactorInterface) []http.ErrorDetail {
 	channels := []chan http.ErrorDetail{}
 	errors := []http.ErrorDetail{}
 	wg := new(sync.WaitGroup)
@@ -84,7 +94,7 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		channels = append(channels, ch)
 		defer close(ch)
 		log := log.With(zap.String("reactorName", reactorConfig.Name), zap.String("reactorType", reactorConfig.Type))
-		go executeReactors(wg, channels[i], ctx, reactorConfig, eventPayload, listener, log, reactorFunctions)
+		go executeReactors(wg, channels[i], ctx, reactorConfig, eventPayload, listenerName, listenerApiPath, log, reactorFunctions)
 	}
 	wg.Wait()
 
@@ -95,10 +105,7 @@ func ExecuteListener(ctx context.Context, c *gin.Context, listener listener.List
 		default:
 		}
 	}
-	if len(errors) > 0 {
-		WriteResponse(slog, 400, errors, c, cfg)
-		return
-	}
+	return errors
 }
 
 func WriteResponse(log *zap.SugaredLogger, status int, errD []http.ErrorDetail, c *gin.Context, cfg *config.ServerConfiguration) {
@@ -110,15 +117,15 @@ func WriteResponse(log *zap.SugaredLogger, status int, errD []http.ErrorDetail, 
 	c.JSON(status, errD)
 }
 
-func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.Context, reactorConfig config.ReactorConfig, eventPayload *message.EventData, listener listener.ListenerInterface, log *zap.Logger, reactorFunctions map[string]func(log *zap.Logger, reactorConfig config.ReactorConfig) reactor.ReactorInterface) {
+func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.Context, reactorConfig config.ReactorConfig, eventPayload *message.EventData, listenerName string, listenerApiPath string, log *zap.Logger, reactorFunctions map[string]func(log *zap.Logger, reactorConfig config.ReactorConfig) reactor.ReactorInterface) {
 	matches, err := matcher.Matches(ctx, reactorConfig, eventPayload)
 	if err != nil {
 		errD := http.ErrorDetail{
-			Type:     listener.GetName() + "-match-message",
-			Title:    listener.GetName() + "Match Message",
+			Type:     listenerName + "-match-message",
+			Title:    listenerName + "Match Message",
 			Status:   400,
 			Detail:   err.Error(),
-			Instance: listener.GetApiPath(),
+			Instance: listenerApiPath,
 		}
 		log.Error(errD.Detail)
 
@@ -135,11 +142,11 @@ func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.C
 	newReactorFunc, exists := reactorFunctions[reactorConfig.Type]
 	if !exists {
 		errD := http.ErrorDetail{
-			Type:     listener.GetName() + "-exists",
-			Title:    listener.GetName() + " Exists",
+			Type:     listenerName + "-exists",
+			Title:    listenerName + " Exists",
 			Status:   400,
 			Detail:   fmt.Sprintf("reactor type of '%s' does not exist. Verify the reactor type of '%s' within the configuration", reactorConfig.Type, reactorConfig.Name),
-			Instance: listener.GetApiPath(),
+			Instance: listenerApiPath,
 		}
 		log.Error(errD.Detail)
 
@@ -154,11 +161,11 @@ func executeReactors(wg *sync.WaitGroup, ch chan http.ErrorDetail, ctx context.C
 	err = reactorObj.ProcessEvent(ctx, eventPayload)
 	if err != nil {
 		errD := http.ErrorDetail{
-			Type:     listener.GetName() + "-" + reactorObj.GetName() + "-execute-reactor",
-			Title:    listener.GetName() + "-" + reactorObj.GetName() + " Execute Reactor",
+			Type:     listenerName + "-" + reactorObj.GetName() + "-execute-reactor",
+			Title:    listenerName + "-" + reactorObj.GetName() + " Execute Reactor",
 			Status:   400,
 			Detail:   err.Error(),
-			Instance: listener.GetApiPath(),
+			Instance: listenerApiPath,
 		}
 		log.Error(errD.Detail)
 

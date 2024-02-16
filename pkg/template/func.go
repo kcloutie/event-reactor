@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
+	"github.com/kcloutie/event-reactor/pkg/maps"
 	"github.com/olekukonko/tablewriter"
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
@@ -35,11 +36,50 @@ func CreateGoTemplatingFuncMap(removeDangerousFuncs bool) template.FuncMap {
 	funcMap["fromJson"] = FromJson
 	funcMap["firstOrDefault"] = FirstOrDefault
 	funcMap["newArray"] = NewArray
+	funcMap["valFromPathFirstOrDefault"] = ValFromPathFirstOrDefault
+	funcMap["valFromPath"] = ValFromPath
+	funcMap["valFromPathOrDefault"] = ValFromPathOrDefault
 	if removeDangerousFuncs {
 		delete(funcMap, "env")
 		delete(funcMap, "expandenv")
 	}
 	return funcMap
+}
+
+func ValFromPathFirstOrDefault(propertyPath string, def interface{}, data interface{}) (interface{}, error) {
+	switch d := data.(type) {
+	case map[string]interface{}:
+		res, err := maps.GetValueFromMapByPath(maps.MapPath(propertyPath), d)
+		if err != nil {
+			return def, nil
+		}
+
+		return FirstOrDefault(def, res), nil
+	default:
+		return nil, fmt.Errorf("valFromPathOrDefault cannot run against type '%T'. Must be a map[string]interface{}", data)
+	}
+}
+
+func ValFromPath(propertyPath string, data interface{}) (interface{}, error) {
+	switch d := data.(type) {
+	case map[string]interface{}:
+		return maps.GetValueFromMapByPath(maps.MapPath(propertyPath), d)
+	default:
+		return nil, fmt.Errorf("valFromPath cannot run against type '%T'. Must be a map[string]interface{}", data)
+	}
+}
+
+func ValFromPathOrDefault(propertyPath string, def interface{}, data interface{}) (interface{}, error) {
+	switch d := data.(type) {
+	case map[string]interface{}:
+		res, err := maps.GetValueFromMapByPath(maps.MapPath(propertyPath), d)
+		if err != nil {
+			return def, nil
+		}
+		return res, nil
+	default:
+		return nil, fmt.Errorf("valFromPathOrDefault cannot run against type '%T'. Must be a map[string]interface{}", data)
+	}
 }
 
 func NewArray() []interface{} {

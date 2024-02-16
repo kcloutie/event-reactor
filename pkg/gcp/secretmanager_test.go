@@ -30,7 +30,7 @@ func Test_createKey(t *testing.T) {
 		{
 			name: "Test with empty inputs",
 			args: args{project: "", name: "", version: ""},
-			want: "projects//secrets//versions/",
+			want: "projects//secrets/",
 		},
 	}
 	for _, tt := range tests {

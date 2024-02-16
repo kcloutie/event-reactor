@@ -67,6 +67,7 @@ type PropertyAndValue struct {
 	PayloadValue *PayloadValueRef     `json:"payloadValue,omitempty" yaml:"payloadValue,omitempty"`
 	FromFile     *string              `json:"fromFile,omitempty" yaml:"fromFile,omitempty"`
 	FromEnv      *string              `json:"fromEnv,omitempty" yaml:"fromEnv,omitempty"`
+	IsSensitive  *bool                `json:"isSensitive,omitempty" yaml:"isSensitive,omitempty"`
 }
 
 type ReactorConfigProperty struct {

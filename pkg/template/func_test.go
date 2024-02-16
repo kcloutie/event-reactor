@@ -595,3 +595,194 @@ func TestToDnsString(t *testing.T) {
 		})
 	}
 }
+
+func TestValFromPathFirstOrDefault(t *testing.T) {
+	type args struct {
+		propertyPath string
+		def          interface{}
+		data         interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name: "Test with map data and existing property path",
+			args: args{
+				propertyPath: "key1.key2",
+				def:          "default",
+				data: map[string]interface{}{
+					"key1": map[string]interface{}{
+						"key2": []string{"value", "value2", "value3"},
+					},
+				},
+			},
+			want:    "value",
+			wantErr: false,
+		},
+		{
+			name: "Test with map data and non-existing property path",
+			args: args{
+				propertyPath: "key1.key3",
+				def:          "default",
+				data: map[string]interface{}{
+					"key1": map[string]interface{}{
+						"key2": "value",
+					},
+				},
+			},
+			want:    "default",
+			wantErr: false,
+		},
+		{
+			name: "Test with non-map data",
+			args: args{
+				propertyPath: "key1.key2",
+				def:          "default",
+				data:         "non-map data",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ValFromPathFirstOrDefault(tt.args.propertyPath, tt.args.def, tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValFromPathFirstOrDefault() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ValFromPathFirstOrDefault() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestValFromPath(t *testing.T) {
+	type args struct {
+		propertyPath string
+		data         interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name: "Test with map data and existing property path",
+			args: args{
+				propertyPath: "key1.key2",
+				data: map[string]interface{}{
+					"key1": map[string]interface{}{
+						"key2": "value",
+					},
+				},
+			},
+			want:    "value",
+			wantErr: false,
+		},
+		{
+			name: "Test with map data and non-existing property path",
+			args: args{
+				propertyPath: "key1.key3",
+				data: map[string]interface{}{
+					"key1": map[string]interface{}{
+						"key2": "value",
+					},
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Test with non-map data",
+			args: args{
+				propertyPath: "key1.key2",
+				data:         "non-map data",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ValFromPath(tt.args.propertyPath, tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValFromPath() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ValFromPath() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestValFromPathOrDefault(t *testing.T) {
+	type args struct {
+		propertyPath string
+		def          interface{}
+		data         interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    interface{}
+		wantErr bool
+	}{
+		{
+			name: "Test with map data and existing property path",
+			args: args{
+				propertyPath: "key1.key2",
+				def:          "default",
+				data: map[string]interface{}{
+					"key1": map[string]interface{}{
+						"key2": "value",
+					},
+				},
+			},
+			want:    "value",
+			wantErr: false,
+		},
+		{
+			name: "Test with map data and non-existing property path",
+			args: args{
+				propertyPath: "key1.key3",
+				def:          "default",
+				data: map[string]interface{}{
+					"key1": map[string]interface{}{
+						"key2": "value",
+					},
+				},
+			},
+			want:    "default",
+			wantErr: false,
+		},
+		{
+			name: "Test with non-map data",
+			args: args{
+				propertyPath: "key1.key2",
+				def:          "default",
+				data:         "non-map data",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ValFromPathOrDefault(tt.args.propertyPath, tt.args.def, tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValFromPathOrDefault() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ValFromPathOrDefault() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
