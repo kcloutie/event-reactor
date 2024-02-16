@@ -54,7 +54,7 @@ func (v *Reactor) GetConfigExample() string {
       value: test123
     bodyTemplate: 
       value: '{"prop1": "{{ .data.prop1 }}"}'
-    bearerToken:
+    token:
       value: "faketoken"
     signatureHeader:
       value: "X-Hub-Signature-256"
@@ -153,13 +153,20 @@ func (v *Reactor) GetReactorConfig(ctx context.Context, data *message.EventData,
 	}
 
 	// ===================================================================================
-	// Get bearerToken
+	// Get token
 	// ===================================================================================
-	bearerToken, err := v.reactorConfig.Properties["bearerToken"].GetStringValue(ctx, v.Log, data)
+	config.WebhookConfig.Token, err = v.reactorConfig.Properties["token"].GetStringValue(ctx, v.Log, data)
 	if err != nil {
 		return nil, err
 	}
-	config.WebhookConfig.BearerToken = bearerToken
+
+	// ===================================================================================
+	// Get tokenType
+	// ===================================================================================
+	config.WebhookConfig.TokenType, err = v.reactorConfig.Properties["tokenType"].GetStringValue(ctx, v.Log, data)
+	if err != nil {
+		return nil, err
+	}
 
 	// ===================================================================================
 	// Get signatureHeader
@@ -236,8 +243,14 @@ func (v *Reactor) GetProperties() []config.ReactorConfigProperty {
 			Type:        config.PropertyTypeString,
 		},
 		{
-			Name:        "bearerToken",
-			Description: "The bearer token to use for authentication. If set, the token will be sent in the Authorization header.",
+			Name:        "token",
+			Description: "The token to use for authentication. If set, the token will be sent in the Authorization header.",
+			Required:    config.AsBoolPointer(false),
+			Type:        config.PropertyTypeString,
+		},
+		{
+			Name:        "tokenType",
+			Description: "The type of token to use for authentication. If not set, it will default to bearer.",
 			Required:    config.AsBoolPointer(false),
 			Type:        config.PropertyTypeString,
 		},

@@ -21,7 +21,8 @@ type WebhookConfig struct {
 	HookSecret        string
 	SignatureHeader   string
 	AdditionalHeaders map[string]string
-	BearerToken       string
+	Token             string
+	TokenType         string
 }
 
 // signBody signs the body with the secret using HMAC-SHA256
@@ -52,8 +53,12 @@ func (c *WebhookConfig) SendWebhook() error {
 	for key, value := range c.AdditionalHeaders {
 		req.Header.Add(key, value)
 	}
-	if c.BearerToken != "" {
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.BearerToken))
+	if c.Token != "" {
+		tokenType := c.TokenType
+		if tokenType == "" {
+			tokenType = "Bearer"
+		}
+		req.Header.Add("Authorization", fmt.Sprintf("%s %s", tokenType, c.Token))
 	}
 
 	response, err := retryClient.Do(req)

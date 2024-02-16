@@ -14,8 +14,13 @@ import (
 
 func TestReactor_ProcessEvent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		if req.Header["Authorization"][0] != fmt.Sprintf("Bearer %v", "token") {
-			t.Fatalf("Invalid token: '%v'", req.Header["Authorization"][0])
+		authHeader, exists := req.Header["Authorization"]
+		if !exists {
+			t.Fatalf("Authorization header does not exist")
+		}
+
+		if authHeader[0] != fmt.Sprintf("Bearer %v", "token") {
+			t.Fatalf("Invalid token: '%v'", authHeader[0])
 		}
 
 		if req.URL.Path == "/valid" {
@@ -46,7 +51,7 @@ func TestReactor_ProcessEvent(t *testing.T) {
 						"bodyTemplate": {
 							Value: `Test123 {{ .data.child1.child2.test_child }}`,
 						},
-						"bearerToken": {
+						"token": {
 							Value: "token",
 						},
 						"maxRetries": {

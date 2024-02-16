@@ -89,10 +89,10 @@ func TestWebhookConfig_SendWebhook(t *testing.T) {
 		{
 			name: "bearer token",
 			c: &WebhookConfig{
-				Log:         zaptest.NewLogger(t),
-				Url:         server.URL + "/token",
-				Body:        body,
-				BearerToken: bearerToken,
+				Log:   zaptest.NewLogger(t),
+				Url:   server.URL + "/token",
+				Body:  body,
+				Token: bearerToken,
 			},
 		},
 		{
